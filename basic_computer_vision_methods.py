@@ -13,15 +13,26 @@ def main():
 
     cv2.imshow('ORIGINAL IMAGE', np.array(pixels_matrix, dtype=np.uint8))
 
-    # LOW PASS
+    # LOW PASS ========
     # cv2.imshow('LOW PASS MEAN FILTER', np.array(perform_low_pass_filter_mean(pixels_matrix), dtype=np.uint8))
     # cv2.imshow('LOW PASS MEAN FILTER BASE', np.array(perform_median_filter_opencv(pixels_matrix), dtype=np.uint8))
 
     # cv2.imshow('LOW PASS MEDIAN FILTER', np.array(perform_low_pass_filter_median(pixels_matrix), dtype=np.uint8))
     # cv2.imshow('LOW PASS MEDIAN FILTER BASE', np.array(perform_median_filter_opencv(pixels_matrix), dtype=np.uint8))
 
-    cv2.imshow('LOW PASS GAUSSIAN FILTER', np.array(perform_low_pass_filter_gaussian(pixels_matrix), dtype=np.uint8))
-    cv2.imshow('LOW PASS GAUSSIAN FILTER BASE', np.array(perform_gaussian_filter_opencv(pixels_matrix), dtype=np.uint8))
+    # cv2.imshow('LOW PASS GAUSSIAN FILTER', np.array(perform_low_pass_filter_gaussian(pixels_matrix), dtype=np.uint8))
+    # cv2.imshow('LOW PASS GAUSSIAN FILTER BASE', np.array(perform_gaussian_filter_opencv(pixels_matrix), dtype=np.uint8))
+
+    # HIGH PASS ========
+    # cv2.imshow('HIGH PASS LAPLACIAN FILTER', np.array(perform_high_pass_filter_laplacian(pixels_matrix), dtype=np.uint8))
+    # cv2.imshow('HIGH PASS LAPLACIAN FILTER BASE', np.array(perform_high_pass_laplacian_filter_opencv(pixels_matrix), dtype=np.uint8))
+
+    # cv2.imshow('HIGH PASS PREWIT FILTER', np.array(perform_high_pass_filter_prewit(pixels_matrix), dtype=np.uint8))
+    # cv2.imshow('HIGH PASS PREWIT FILTER BASE', np.array(perform_high_pass_prewit_filter_opencv(pixels_matrix), dtype=np.uint8))
+
+    # cv2.imshow('HIGH PASS SOBEL FILTER ', np.array(perform_high_pass_filter_sobel(pixels_matrix), dtype=np.uint8))
+    # cv2.imshow('HIGH PASS SOBEL FILTER BASE', np.array(perform_high_pass_sobel_filter_opencv(pixels_matrix), dtype=np.uint8))
+
 
     cv2.waitKey(0)
     cv2.destroyAllWindows()
@@ -147,6 +158,142 @@ def perform_gaussian_filter_opencv(pixels_matrix):
     kernel_size = (5, 5)
     sigmaX = 0
     image_filtered = cv2.GaussianBlur(image, kernel_size, sigmaX)
+
+    return image_filtered
+
+''' ================= LAPLACIAN FILTER ======================'''
+
+# IMPLEMENTATION
+def perform_high_pass_filter_laplacian(pixels_matrix):
+    kernel = [
+        [0,  0, -1,  0,  0],
+        [0, -1, -2, -1,  0],
+        [-1, -2, 16, -2, -1],
+        [0, -1, -2, -1,  0],
+        [0,  0, -1,  0,  0]
+    ]
+
+    result_matrix = []
+
+    for _ in range(len(pixels_matrix)):
+        result_matrix.append([])
+
+    kernel_center_row = len(kernel) // 2
+    kernel_center_col = len(kernel[0]) // 2
+
+    for i in range(len(pixels_matrix)):
+        for j in range(len(pixels_matrix[0])):
+            value = 0
+            for m in range(len(kernel)):
+                for n in range(len(kernel[0])):
+                    row = i + (m - kernel_center_row)
+                    col = j + (n - kernel_center_col)
+
+                    if 0 <= row < len(pixels_matrix) and 0 <= col < len(pixels_matrix[0]):
+                        value += pixels_matrix[row][col] * kernel[m][n]
+
+            result_matrix[i].append(min(max(value, 0), 255))
+
+    return result_matrix
+
+# BASE
+def perform_high_pass_laplacian_filter_opencv(pixels_matrix):
+    image = np.array(pixels_matrix, dtype=np.uint8)
+    kernel_size = 5
+    ddepth = cv2.CV_16S
+    image_filtered = cv2.Laplacian(image, ddepth, ksize=kernel_size)
+    image_filtered = cv2.convertScaleAbs(image_filtered)
+
+    return image_filtered
+
+''' ================= PREWIT FILTER ======================'''
+
+# IMPLEMENTATION
+def perform_high_pass_filter_prewit(pixels_matrix):
+        kernel = [
+            [-1, -1, -1],
+            [ 0,  0,  0],
+            [ 1,  1,  1]
+        ]
+
+        result_matrix = []
+
+        for _ in range(len(pixels_matrix)):
+            result_matrix.append([])
+
+        kernel_center_row = len(kernel) // 2
+        kernel_center_col = len(kernel[0]) // 2
+
+        for i in range(len(pixels_matrix)):
+            for j in range(len(pixels_matrix[0])):
+                value = 0
+                for m in range(len(kernel)):
+                    for n in range(len(kernel[0])):
+                        row = i + (m - kernel_center_row)
+                        col = j + (n - kernel_center_col)
+
+                        if 0 <= row < len(pixels_matrix) and 0 <= col < len(pixels_matrix[0]):
+                            value += pixels_matrix[row][col] * kernel[m][n]
+
+                #Keep pixels in range 0 - 255
+                result_matrix[i].append(min(max(value, 0), 255))
+
+        return result_matrix
+
+# BASE
+def perform_high_pass_prewit_filter_opencv(pixels_matrix):
+    image = np.array(pixels_matrix, dtype=np.uint8)
+    prewitt_kernel_vertical = np.array([
+            [-1, -1, -1],
+            [ 0,  0,  0],
+            [ 1,  1,  1]
+        ], 
+        dtype=np.float32
+    )
+
+    image_filtered =  cv2.filter2D(image, 0, prewitt_kernel_vertical)
+
+    return image_filtered
+
+''' ================= SOBEL FILTER ======================'''
+
+# IMPLEMENTATION
+def perform_high_pass_filter_sobel(pixels_matrix):
+        kernel = [
+            [-1, 0, 1],
+            [-2, 0, 2],
+            [-1, 0, 1]
+        ]
+
+        result_matrix = []
+
+        for _ in range(len(pixels_matrix)):
+            result_matrix.append([])
+
+        kernel_center_row = len(kernel) // 2
+        kernel_center_col = len(kernel[0]) // 2
+
+        for i in range(len(pixels_matrix)):
+            for j in range(len(pixels_matrix[0])):
+                value = 0
+                for m in range(len(kernel)):
+                    for n in range(len(kernel[0])):
+                        row = i + (m - kernel_center_row)
+                        col = j + (n - kernel_center_col)
+
+                        if 0 <= row < len(pixels_matrix) and 0 <= col < len(pixels_matrix[0]):
+                            value += pixels_matrix[row][col] * kernel[m][n]
+
+                #Keep pixels in range 0 - 255
+                result_matrix[i].append(min(max(value, 0), 255))
+
+        return result_matrix
+
+# BASE
+def perform_high_pass_sobel_filter_opencv(pixels_matrix):
+    image = np.array(pixels_matrix, dtype=np.uint8)
+    image_filtered = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=3)
+    image_filtered = cv2.convertScaleAbs(image_filtered)
 
     return image_filtered
 
